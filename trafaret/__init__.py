@@ -922,7 +922,8 @@ class Key(object):
     """
     __slots__ = ['name', 'to_name', 'default', 'optional', 'trafaret']
 
-    def __init__(self, name, default=_empty, optional=False, to_name=None, trafaret=None):
+    def __init__(self, name, default=_empty, optional=False,
+                 to_name=None, trafaret=None):
         self.name = name
         self.to_name = to_name
         self.default = default
@@ -1025,6 +1026,7 @@ class Dict(Trafaret):
         self.allow_any = False
         self.ignore = []
         self.ignore_any = False
+        self.mutually_exclusives = []
         self.keys = list(args)
         for key, trafaret in itertools.chain(trafarets.items(), keys.items()):
             key_ = Key(key) if isinstance(key, str_types) else key
@@ -1053,6 +1055,11 @@ class Dict(Trafaret):
         for key in self.keys:
             if key.name in args or '*' in args:
                 key.make_optional()
+        return self
+
+    def mutually_exclusive(self, *names_tuples):
+        for names_tuple in names_tuples:
+            self.mutually_exclusives.append(names_tuple)
         return self
 
     def check_and_return(self, value):
@@ -1097,6 +1104,12 @@ class Dict(Trafaret):
                         collect[key] = self.extras_trafaret(value[key])
                     except DataError as de:
                         errors[key] = de
+
+        for name_pair in self.mutually_exclusives:
+            if len(set(name_pair) & set(collect.keys())) > 1:
+                errors[name_pair[0]] = '{} mutually exclusive with {}'.format(
+                    name_pair[0], ', '.join(name_pair[1:]))
+
         if errors:
             raise DataError(error=errors, trafaret=self)
         return collect
@@ -1147,13 +1160,13 @@ class Dict(Trafaret):
             other_keys = other
         if set(self.keys_names()) & set(other_keys_names):
             raise ValueError('Merged dicts should have '
-                            'no interlapping keys')
+                             'no interlapping keys')
         if (
             set(key.get_name() for key in self.keys)
             & set(key.get_name() for key in other_keys)
         ):
             raise ValueError('Merged dicts should have '
-                            'no interlapping keys to names')
+                             'no interlapping keys to names')
         new_trafaret = self.__class__()
         new_trafaret.keys = self.keys + other_keys
         return new_trafaret
