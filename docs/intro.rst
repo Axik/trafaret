@@ -209,6 +209,30 @@ Methods:
 
 ``merge(Dict|dict|[t.Key...])`` : where argument can be other ``Dict``, ``dict`` like provided to ``Dict``, or list of ``Key``s. Also provided as ``__add__``, so you can add ``Dict``s, like ``dict1 + dict2``.
 
+``mutually_exclusive(*names_tuples)`` : where argument are the list of tuples of names that are mutually exclusive.
+
+Example::
+
+    >>> t.Dict({
+        t.Key('a', optional=True): t.String,
+        t.Key('b'): t.String,
+        t.Key('c', optional=True): t.String
+    }).mutually_exclusive(*[('a','c')]).check({'a': 'key_a', 'b': 'key_b'})
+    {'a': 'key_a', 'b': 'key_b'}
+    >>> t.extract_error(t.Dict({
+        t.Key('a', optional=True): t.String,
+        t.Key('b'): t.String,
+        t.Key('c', optional=True): t.String
+    }).mutually_exclusive(*[('a','c')]), {'a': 'key_a', 'b': 'key_b', 'c': 'key_c'})
+    {'a': 'a mutually exclusive with c'}
+    >>> t.extract_error(t.Dict({
+        t.Key('a', optional=True): t.String,
+        t.Key('b'): t.String,
+        t.Key('c', optional=True): t.String
+    }).mutually_exclusive(*[('a','c')]), {'b': 'key_b'})
+    {'a': 'at least one key required from set: a, c'}
+
+
 Key
 ...
 
