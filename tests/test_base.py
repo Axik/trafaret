@@ -207,7 +207,37 @@ class TestDictTrafaret(unittest.TestCase):
         res = extract_error(trafaret, Map({"foo": "xxx", "bar": 'str'}))
         self.assertEqual(res, {'bar': "value can't be converted to float"})
 
+    def test_mutually_exclusive(self):
+        trafaret = t.Dict({
+            t.Key('ami', optional=True): t.String,
+            t.Key('ami_config_key', optional=True): t.String,
+            t.Key('label'): t.String
+        }).mutually_exclusive(* [('ami', 'ami_config_key')])
+        self.assertEqual(
+            trafaret.check({
+                'label': 'nya',
+                'ami_config_key': 'the_key'
+            }), {'label': 'nya',
+                 'ami_config_key': 'the_key'})
 
+        self.assertEqual(
+            trafaret.check({
+                'label': 'nya',
+                'ami': 'ami-d2384821'
+            }), {'label': 'nya',
+                 'ami': 'ami-d2384821'})
+
+        res = t.extract_error(trafaret, {
+            'label': 'nya',
+            'ami_config_key': 'the_key',
+            'ami': 'ami-d2384821'
+        })
+        self.assertEqual(res, {'ami': 'ami mutually exclusive with ami_config_key'})
+
+        res = t.extract_error(trafaret, {
+            'label': 'nya'
+            })
+        self.assertEqual(res, {'ami': 'at least one key required from set: ami, ami_config_key'})
 
 
 class TestDictKeys(unittest.TestCase):

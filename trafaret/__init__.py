@@ -1105,10 +1105,15 @@ class Dict(Trafaret):
                     except DataError as de:
                         errors[key] = de
 
+        # Mutual exclusivity validation logic
         for name_pair in self.mutually_exclusives:
-            if len(set(name_pair) & set(collect.keys())) > 1:
+            keys_present = len(set(name_pair) & set(collect.keys()))
+            if keys_present > 1:
                 errors[name_pair[0]] = '{} mutually exclusive with {}'.format(
                     name_pair[0], ', '.join(name_pair[1:]))
+            elif keys_present < 1:
+                errors[name_pair[0]] = 'at least one key required from set: {}'.format(
+                    ', '.join(name_pair))
 
         if errors:
             raise DataError(error=errors, trafaret=self)
