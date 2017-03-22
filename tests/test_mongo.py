@@ -4,6 +4,7 @@ import trafaret as t
 from trafaret.contrib.object_id import ObjectId
 from trafaret import extract_error
 
+
 class TestMongoIdTrafaret(unittest.TestCase):
 
     def test_mongo_id(self):
@@ -27,5 +28,3 @@ class TestMongoIdTrafaret(unittest.TestCase):
                               " a 12-byte input or a 24-character hex string")
 
         self.assertIsInstance(c.check(None), ObjectId)
-
-
